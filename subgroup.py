@@ -1,18 +1,18 @@
 from ast import List
-from Condition import Condition
-from DataSet import DataSet
+from condition import Condition
+from dataset import DataSet
 from pandas import DataFrame, Index
 
-from Description import Description
-from SearchConstraints import SearchConstraints
+from description import Description
+from search_constraints import SearchConstraints
 
 class SubGroup(DataSet):
-    def __init__(self, data: DataSet, description: List[Condition]) -> None:
+    def __init__(self, data: DataSet, description: list[Condition]) -> None:
         # DataSet parameters
         self.descriptors = data.descriptors
         self.targets = data.targets
         # Own parameters
-        self.description: List[Condition] = description
+        self.description: list[Condition] = description
         self.quality: float = 0
 
     def subset(self, subset_index: Index):

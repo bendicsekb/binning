@@ -1,10 +1,10 @@
 from typing import List
-from Condition import Condition
+from condition import Condition
 
 
 class Description:
     def __init__(self) -> None:
-        self.description: List[Condition]= []
+        self.description: list[Condition]= []
 
 
 

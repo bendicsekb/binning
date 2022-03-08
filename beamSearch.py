@@ -2,31 +2,30 @@ from ast import Sub
 import heapq
 from typing import List
 from pandas import Index
-from Condition import Condition
+from condition import Condition
 
-from DataSet import DataSet
-from Description import Description
-from QualityMeasure import QualityMeasure
-from ResultSet import ResultSet
-from SearchConstraints import SearchConstraints
-from SubGroup import SubGroup
+from dataset import DataSet
+from description import Description
+from quality_measure import QualityMeasure
+from search_constraints import SearchConstraints
+from subgroup import SubGroup
 
 
-def beamSearch(D: DataSet, phi: QualityMeasure,  P: SearchConstraints) -> ResultSet:
-    F: List[SubGroup] = list() # Result set
-    S: List[SubGroup] = list() # Candidate set
+def beamSearch(D: DataSet, phi: QualityMeasure,  P: SearchConstraints) -> list[SubGroup]:
+    F: list[SubGroup] = list() # Result set
+    S: list[SubGroup] = list() # Candidate set
     I: Description = Description([]) # Empty description
 
     heapq.heappush(S, (0, SubGroup(D, I))) # S = S U I_empty 
     
     
     for _ in range(P.depth):
-        beam: List[SubGroup] = []
+        beam: list[SubGroup] = []
 
         while (len(S) > 0):
             s: SubGroup = selectSeed(P, S)
 
-            R: List[SubGroup] = generateRefinements(s, D, P)
+            R: list[SubGroup] = generateRefinements(s, D, P)
             for r in R:
                 score = phi.run_on(r)
                 r.quality = score
@@ -40,15 +39,15 @@ def beamSearch(D: DataSet, phi: QualityMeasure,  P: SearchConstraints) -> Result
 def selectSeed(P: SearchConstraints, S: SubGroup) -> SubGroup:
     return S.pop(0)[1] # S <- S \ s 
 
-def generateRefinements(s: SubGroup, D:DataSet, P:SearchConstraints) -> List[SubGroup]:
+def generateRefinements(s: SubGroup, D:DataSet, P:SearchConstraints) -> list[SubGroup]:
     attribute_names = D.descriptors.columns
     refinements = []
     for attribute_name in attribute_names:
         sorted = s.descriptors.loc[s.descriptors[attribute_name].argsort()]
         # generate binary splits ordered from smallest to largest (10000 11000 11100 11110)
-        splits: List[Index] = P.quantizer.discretize(sorted[attribute_name])
+        splits: list[Index] = P.quantizer.discretize(sorted[attribute_name])
         # generate all possible intervals from combining splits
-        intervals: List[Index] = generateIntervals(sorted.index, splits)
+        intervals: list[Index] = generateIntervals(sorted.index, splits)
         # for every interval make a refinement
         for interval in intervals:
             first = D.descriptors[interval].head(1)[attribute_name]
@@ -63,9 +62,9 @@ def generateRefinements(s: SubGroup, D:DataSet, P:SearchConstraints) -> List[Sub
             refinements.append(refinement)
         
 
-def generateIntervals(all:Index, splits: List[Index]) -> List[Index]:
+def generateIntervals(all:Index, splits: list[Index]) -> list[Index]:
     # add splits directly
-    intervals: List[Index] = splits
+    intervals: list[Index] = splits
     # add all negations of splits
     for split in splits:
         intervals.append(all.difference(split, sort=False))
@@ -76,18 +75,18 @@ def generateIntervals(all:Index, splits: List[Index]) -> List[Index]:
     return intervals
 
 
-def addToBeam(P:SearchConstraints, beam: List[SubGroup], r: SubGroup, score: float):
+def addToBeam(P:SearchConstraints, beam: list[SubGroup], r: SubGroup, score: float):
     if (len(beam) < P.width):
         heapq.heappush(beam, (score, r))
     else:
         heapq.heappushpop(beam, (score, r))
 
 
-def addToCandidateSet(S: List[SubGroup], beam: List[SubGroup]):
+def addToCandidateSet(S: list[SubGroup], beam: list[SubGroup]):
     S.extend(beam)
 
 
-def addToResultSet(P: SearchConstraints, F: ResultSet, r: SubGroup, score: float):
+def addToResultSet(P: SearchConstraints, F: list[SubGroup], r: SubGroup, score: float):
     if (len(F) < P.q):
         heapq.heappush(F, (score, r))
     else:
