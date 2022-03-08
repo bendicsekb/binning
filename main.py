@@ -29,8 +29,8 @@ def read_mammals(path):
 if __name__ == '__main__':
     ds: DataSet = read_mammals("./data/Mammals_dataset/mammals.arff")
     qm = WRACC(ds, ds.targets[ds.targets==1].index)
-    qantizer = EqualFrequencyDiscretizer(10)
+    quantizer = EqualFrequencyDiscretizer(10)
     search_constraints = SearchConstraints(depth=10, width=20, q=10, minimum_coverage=0.01, 
-                                            quality_measure=qm, quantizer=EqualFrequencyDiscretizer)
+                                            quality_measure=qm, quantizer=quantizer)
     result = beamSearch(ds, qm, search_constraints)
     print(result)

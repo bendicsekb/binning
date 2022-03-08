@@ -13,11 +13,10 @@ class EqualFrequencyDiscretizer(Discretizer):
     def __init__(self, number_of_bins:int):
         self.number_of_bins = number_of_bins
     def discretize(self, column:Series):
-        pass
-        # n:int = len(column)
+        n:int = len(column) -1 
 
-        # B = list()
-        # for b in range(1, self.number_of_bins + 1):
-        #     ix = floor(n*b/self.number_of_bins)
-        #     B.append(column[ix])
-        # return B
+        B = list()
+        for b in range(1, self.number_of_bins + 1):
+            ix = floor(n*b/(self.number_of_bins + 1))
+            B.append(ix)
+        return [column.index[:b] for b in B]
