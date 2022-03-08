@@ -14,7 +14,7 @@ from subgroup import SubGroup
 def beamSearch(D: DataSet, phi: QualityMeasure,  P: SearchConstraints) -> list[SubGroup]:
     F: list[SubGroup] = list() # Result set
     S: list[SubGroup] = list() # Candidate set
-    I: Description = Description([]) # Empty description
+    I: Description = Description() # Empty description
 
     heapq.heappush(S, (0, SubGroup(D, I))) # S = S U I_empty 
     
