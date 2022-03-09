@@ -25,19 +25,19 @@ class SubGroup(DataSet):
         self.subset(index)
 
     def __add_condition(self, new_condition: Condition):
-        if (self.__in_description(new_condition.attribute)):
+        if (self.__in_description(new_condition)):
             for idx, condition in enumerate(self.description):
-                # TODO write as a dataclass => if(description == condition
+                # TODO write as a dataclass => if(condition == new_condition
                 if (condition.attribute == new_condition.attribute and condition.negated == new_condition.negated and condition.value != new_condition.value):
                     self.description[idx]=new_condition
                     break
         else:
             self.description.append(new_condition)
 
-    def __in_description(self, attribute_name: str) -> bool:
+    def __in_description(self, new_condition: str) -> bool:
         is_in: bool = False
         for condition in self.conditions:
-            if (attribute_name == condition.attribute):
+            if (condition.attribute == new_condition.attribute and condition.negated == new_condition.negated):
                 is_in = True
                 break
         return is_in
