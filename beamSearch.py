@@ -50,8 +50,8 @@ def generateRefinements(s: SubGroup, D:DataSet, P:SearchConstraints) -> list[Sub
         intervals: list[Index] = P.quantizer.generate_splits(sorted[attribute_name], splits)
         # for every interval make a refinement
         for interval in intervals:
-            first = D.descriptors[interval].head(1)[attribute_name]
-            last = D.descriptors[interval].tail(1)[attribute_name]
+            first = D.descriptors.loc[interval[0]][attribute_name]
+            last = D.descriptors.loc[interval[-1]][attribute_name]
             # 1. make new conditions based on interval
             left_bound: Condition = Condition(attribute_name, value=first)
             right_bound: Condition = Condition(attribute_name, value=last, negated=True)

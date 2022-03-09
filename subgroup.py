@@ -36,7 +36,7 @@ class SubGroup(DataSet):
 
     def __in_description(self, new_condition: str) -> bool:
         is_in: bool = False
-        for condition in self.conditions:
+        for condition in self.description:
             if (condition.attribute == new_condition.attribute and condition.negated == new_condition.negated):
                 is_in = True
                 break
