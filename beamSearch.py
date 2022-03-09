@@ -44,10 +44,10 @@ def generateRefinements(s: SubGroup, D:DataSet, P:SearchConstraints) -> list[Sub
     refinements = []
     for attribute_name in attribute_names:
         sorted = s.descriptors.loc[s.descriptors[attribute_name].argsort()]
-        # generate binary splits ordered from smallest to largest (10000 11000 11100 11110)
-        splits: list[Index] = P.quantizer.discretize(sorted[attribute_name])
+        # generate splits with tuples in form (from:to)
+        splits: list[tuple] = P.quantizer.discretize(sorted[attribute_name])
         # generate all possible intervals from combining splits
-        intervals: list[Index] = generateIntervals(sorted.index, splits)
+        intervals: list[Index] = P.quantizer.generate_splits(sorted[attribute_name], splits)
         # for every interval make a refinement
         for interval in intervals:
             first = D.descriptors[interval].head(1)[attribute_name]
@@ -62,17 +62,17 @@ def generateRefinements(s: SubGroup, D:DataSet, P:SearchConstraints) -> list[Sub
             refinements.append(refinement)
         
 
-def generateIntervals(all:Index, splits: list[Index]) -> list[Index]:
-    # add splits directly
-    intervals: list[Index] = splits
-    # add all negations of splits
-    for split in splits:
-        intervals.append(all.difference(split, sort=False))
-    # add intersection of splits
-    if (len(splits) > 1):
-        for i, split in enumerate(splits[1:]):
-            intervals.append(split.intersection(all.difference(splits[i], sort=False), sort=False))
-    return intervals
+# def generateIntervals(all:Index, splits: list[Index]) -> list[Index]:
+#     # add splits directly
+#     intervals: list[Index] = splits
+#     # add all negations of splits
+#     for split in splits:
+#         intervals.append(all.difference(split, sort=False))
+#     # add intersection of splits
+#     if (len(splits) > 1):
+#         for i, split in enumerate(splits[1:]):
+#             intervals.append(split.intersection(all.difference(splits[i], sort=False), sort=False))
+#     return intervals
 
 
 def addToBeam(P:SearchConstraints, beam: list[SubGroup], r: SubGroup, score: float):
