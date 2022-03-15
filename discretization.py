@@ -26,10 +26,10 @@ class Discretizer:
         splits = self.generate_all_splits(self.number_of_bins)
         intervals: list[Index] = list()
         for split in splits:
-            idx = Index([])
-            for lower, higher in [r for r, s in zip(ranges, split) if s]:
-                idx = idx.append(column.index[lower:higher])
-            intervals.append(idx)
+            active_ranges =  [r for r, s in zip(ranges, split) if s]
+            lower = active_ranges[0][0]
+            higher = active_ranges[-1][1]
+            intervals.append(column.index[lower:higher])
         return intervals
     
 
