@@ -1,4 +1,5 @@
 from ast import Sub
+import copy
 import heapq
 from typing import List
 from pandas import Index
@@ -15,8 +16,8 @@ def beamSearch(D: DataSet, phi: QualityMeasure,  P: SearchConstraints) -> list[S
     F: list[SubGroup] = list() # Result set
     S: list[SubGroup] = list() # Candidate set
     I: list[Condition] = list() # Empty description
-
-    heapq.heappush(S, (0, SubGroup(D, I))) # S = S U I_empty 
+    unique_counter = int(2e32)
+    heapq.heappush(S, (0, 0, SubGroup(D, I))) # S = S U I_empty 
     
     
     for _ in range(P.depth):
@@ -27,23 +28,24 @@ def beamSearch(D: DataSet, phi: QualityMeasure,  P: SearchConstraints) -> list[S
 
             R: list[SubGroup] = generateRefinements(s, D, P)
             for r in R:
+                unique_counter -= 1
                 score = phi.run_on(r)
                 r.quality = score
-                addToBeam(P, beam, r, score)
-                addToResultSet(P, F, r, score)
+                addToBeam(P, beam, r, score, unique_counter)
+                addToResultSet(P, F, r, score, unique_counter)
         addToCandidateSet(S, beam)
     
     return F
 
 
 def selectSeed(P: SearchConstraints, S: SubGroup) -> SubGroup:
-    return S.pop(0)[1] # S <- S \ s 
+    return S.pop(0)[2] # S <- S \ s 
 
 def generateRefinements(s: SubGroup, D:DataSet, P:SearchConstraints) -> list[SubGroup]:
     attribute_names = D.descriptors.columns
     refinements = []
     for attribute_name in attribute_names:
-        sorted = s.descriptors.loc[s.descriptors[attribute_name].argsort()]
+        sorted = s.descriptors.loc[s.index[s.descriptors[attribute_name].argsort()]]
         # generate splits with tuples in form (from:to)
         splits: list[tuple] = P.quantizer.discretize(sorted[attribute_name])
         # generate all possible intervals from combining splits
@@ -56,10 +58,11 @@ def generateRefinements(s: SubGroup, D:DataSet, P:SearchConstraints) -> list[Sub
             left_bound: Condition = Condition(attribute_name, value=first)
             right_bound: Condition = Condition(attribute_name, value=last, negated=True)
             # 2. check if conditions can be added to description, if so, add to description and subset the data
-            refinement: SubGroup = s
+            refinement: SubGroup = copy.deepcopy(s)
             refinement.add_conditions(interval, left_bound, right_bound)
 
             refinements.append(refinement)
+    return refinements
         
 
 # def generateIntervals(all:Index, splits: list[Index]) -> list[Index]:
@@ -75,20 +78,20 @@ def generateRefinements(s: SubGroup, D:DataSet, P:SearchConstraints) -> list[Sub
 #     return intervals
 
 
-def addToBeam(P:SearchConstraints, beam: list[SubGroup], r: SubGroup, score: float):
+def addToBeam(P:SearchConstraints, beam: list[SubGroup], r: SubGroup, score: float, unique_counter: int):
     if (len(beam) < P.width):
-        heapq.heappush(beam, (score, r))
+        heapq.heappush(beam, (score, unique_counter, r))
     else:
-        heapq.heappushpop(beam, (score, r))
+        heapq.heappushpop(beam, (score, unique_counter, r))
 
 
 def addToCandidateSet(S: list[SubGroup], beam: list[SubGroup]):
     S.extend(beam)
 
 
-def addToResultSet(P: SearchConstraints, F: list[SubGroup], r: SubGroup, score: float):
+def addToResultSet(P: SearchConstraints, F: list[SubGroup], r: SubGroup, score: float, unique_counter: int):
     if (len(F) < P.q):
-        heapq.heappush(F, (score, r))
+        heapq.heappush(F, (score, unique_counter, r))
     else:
-        heapq.heappushpop(F, (score, r))
+        heapq.heappushpop(F, (score, unique_counter, r))
 

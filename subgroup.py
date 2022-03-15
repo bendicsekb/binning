@@ -9,15 +9,20 @@ from search_constraints import SearchConstraints
 class SubGroup(DataSet):
     def __init__(self, data: DataSet, description: list[Condition]) -> None:
         # DataSet parameters
-        self.descriptors = data.descriptors
-        self.targets = data.targets
+        self.data = data
+        self.index = data.targets.index
         # Own parameters
         self.description: list[Condition] = description
         self.quality: float = 0
+    @property
+    def descriptors(self):
+        return self.data.descriptors.loc[self.index]
+    @property
+    def targets(self):
+        return self.data.targets.loc[self.index]
 
     def subset(self, subset_index: Index):
-        self.descriptors = self.descriptors[subset_index]
-        self.targets = self.targets[subset_index]
+        self.index = subset_index
 
     def add_conditions(self, index: Index, left_bound: Condition, right_bound: Condition):
         self.__add_condition(left_bound)
