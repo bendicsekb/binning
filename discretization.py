@@ -53,3 +53,6 @@ class EqualFrequencyDiscretizer(Discretizer):
             ranges.append((b, next_b))
         return ranges
 
+class HistogramDiscretizer(Discretizer):
+    def __init__(self, max_number_of_bins:int):
+        self.max_number_of_bins = max_number_of_bins
