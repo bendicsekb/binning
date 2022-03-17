@@ -35,5 +35,5 @@ class Condition:
     def __repr__(self) -> str:
         representation = "Empty condition"
         if (not self.empty):
-            representation = f"{self.attribute} {'>=' if not self.negated else '<='} {self.value}"
+            representation = f"{self.attribute} {'>' if not self.negated else '<='} {self.value}"
         return representation

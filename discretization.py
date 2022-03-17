@@ -40,9 +40,10 @@ class Discretizer:
     def make_ranges(self, B: list):
         ranges = []
         for i in range(len(B)-1):
-            b = B[i]
+            b = B[i] + 1
             next_b = B[i+1]
             ranges.append((b, next_b))
+        ranges[0] = (ranges[0][0] - 1, ranges[0][1])
         return ranges
 
 
