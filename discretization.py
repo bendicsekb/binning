@@ -23,9 +23,12 @@ class Discretizer:
                 b = neg_ranges[i]
                 splits.append([ai and bi for ai, bi in zip(a, b)])
         return splits
-        
+    
     def generate_intervals(self, column:Series, ranges: list[tuple]):
-        splits = self.generate_all_splits(self.number_of_bins)
+        ''' Takes values of an attribute and returns all ranges with binary discretization '''
+        pass
+    
+    def _generate_intervals(self, column:Series, ranges: list[tuple], splits):
         intervals: list[Index] = list()
         for split in splits:
             active_ranges =  [r for r, s in zip(ranges, split) if s]
@@ -56,6 +59,10 @@ class EqualFrequencyDiscretizer(Discretizer):
             B.append(ix)
         B.append(n)
         return self.make_ranges(B)
+    def generate_intervals(self, column:Series, ranges: list[tuple]):
+        splits = self.generate_all_splits(self.number_of_bins)
+        return self._generate_intervals(column, ranges, splits)
+
     
 
 class HistogramDiscretizer(Discretizer):
@@ -88,3 +95,7 @@ class HistogramDiscretizer(Discretizer):
 
     def discretize(self, column: Series):
         return self.global_discretization[column.name]
+
+    def generate_intervals(self, column: Series, ranges: list[tuple]):
+        splits = self.generate_all_splits(len(self.global_discretization[column.name]))
+        return self._generate_intervals(column, ranges, splits)
