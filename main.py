@@ -27,10 +27,12 @@ def read_mammals(path: string):
     return ds
 
 def read_ionosphere(path: string):
-    columns = [f'd{i}' for i in range(1, 35)]
+    not_used = ['drop1', 'drop2']
+    columns = not_used + [f'd{i}' for i in range(1, 33)]
     columns.append('t')
     with open(path) as datafile:
         df = pd.read_csv(datafile, header=None, names=columns )
+    df = df.drop(not_used, axis=1)
     df['t'] = df['t'].apply(lambda elem: 1 if elem == 'g' else 0 )
     ds = DataSet()
     ds.descriptors = df.drop('t', axis=1)
