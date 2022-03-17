@@ -1,4 +1,4 @@
-from ast import List
+import string
 from condition import Condition
 from dataset import DataSet
 from pandas import DataFrame, Index
@@ -14,6 +14,8 @@ class SubGroup(DataSet):
         # Own parameters
         self.description: list[Condition] = description
         self.quality: float = 0
+        self.discretization_boundaries = {}
+        self.depth = -1
     @property
     def descriptors(self):
         return self.data.descriptors.loc[self.index]
@@ -28,6 +30,12 @@ class SubGroup(DataSet):
         self.__add_condition(left_bound)
         self.__add_condition(right_bound)
         self.subset(index)
+
+    def add_boundaries(self, attribute_name: string, discretization_boundaries: list[tuple]):
+        if attribute_name not in self.discretization_boundaries:
+            self.discretization_boundaries[attribute_name] = [discretization_boundaries]
+        else:
+            self.discretization_boundaries[attribute_name].append(discretization_boundaries)
 
     def __add_condition(self, new_condition: Condition):
         if (self.__in_description(new_condition)):

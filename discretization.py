@@ -22,7 +22,7 @@ class Discretizer:
                 splits.append([ai and bi for ai, bi in zip(a, b)])
         return splits
         
-    def generate_splits(self, column:Series, ranges: list[tuple]):
+    def generate_intervals(self, column:Series, ranges: list[tuple]):
         splits = self.generate_all_splits(self.number_of_bins)
         intervals: list[Index] = list()
         for split in splits:
@@ -56,3 +56,5 @@ class EqualFrequencyDiscretizer(Discretizer):
 class HistogramDiscretizer(Discretizer):
     def __init__(self, max_number_of_bins:int):
         self.max_number_of_bins = max_number_of_bins
+
+    

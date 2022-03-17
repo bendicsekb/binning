@@ -56,4 +56,4 @@ def main():
 
 if __name__ == '__main__':
     import cProfile
-    cProfile.run('main()', './profiling/ionosphere_03_15.dat')
+    cProfile.run('main()', './profiling/ionosphere_03_17.dat')

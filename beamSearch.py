@@ -19,8 +19,7 @@ def beamSearch(D: DataSet, phi: QualityMeasure,  P: SearchConstraints) -> list[S
     unique_counter = int(2e32)
     heapq.heappush(S, (0, 0, SubGroup(D, I))) # S = S U I_empty 
     
-    
-    for _ in range(P.depth):
+    for depth in range(P.depth):
         beam: list[SubGroup] = []
 
         while (len(S) > 0):
@@ -31,6 +30,7 @@ def beamSearch(D: DataSet, phi: QualityMeasure,  P: SearchConstraints) -> list[S
                 unique_counter -= 1
                 score = phi.run_on(r)
                 r.quality = score
+                r.depth = depth
                 addToBeam(P, beam, r, score, unique_counter)
                 addToResultSet(P, F, r, score, unique_counter)
         addToCandidateSet(S, beam)
@@ -48,8 +48,9 @@ def generateRefinements(s: SubGroup, D:DataSet, P:SearchConstraints) -> list[Sub
         sorted = s.descriptors.loc[s.index[s.descriptors[attribute_name].argsort()]]
         # generate splits with tuples in form (from:to)
         splits: list[tuple] = P.quantizer.discretize(sorted[attribute_name])
+        boundaries = [(sorted[attribute_name][sorted.index[split[0]]], sorted[attribute_name][sorted.index[split[1]]]) for split in splits]
         # generate all possible intervals from combining splits
-        intervals: list[Index] = P.quantizer.generate_splits(sorted[attribute_name], splits)
+        intervals: list[Index] = P.quantizer.generate_intervals(sorted[attribute_name], splits)
         # for every interval make a refinement
         for interval in intervals:
             first = D.descriptors.loc[interval[0]][attribute_name]
@@ -60,6 +61,7 @@ def generateRefinements(s: SubGroup, D:DataSet, P:SearchConstraints) -> list[Sub
             # 2. check if conditions can be added to description, if so, add to description and subset the data
             refinement: SubGroup = copy.deepcopy(s)
             refinement.add_conditions(interval, left_bound, right_bound)
+            refinement.add_boundaries(attribute_name, boundaries)
 
             refinements.append(refinement)
     return refinements
