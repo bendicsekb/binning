@@ -1,5 +1,6 @@
 # from beamSearch import beamSearch
 import string
+import time
 import pandas as pd
 import numpy as np
 from scipy.io.arff import loadarff
@@ -63,6 +64,18 @@ def main(dataset_name: DataSets, quantizer_type: Discretizers):
     result = beamSearch(ds, qm, search_constraints)
     print(result)
 
+def run_discretizers():
+    t = time.time()
+    main(DataSets.MAMMALS, Discretizers.EQUAL_FREQUENCY)
+    t_eq = time.time() - t
+    t = time.time()
+    main(DataSets.MAMMALS, Discretizers.HISTOGRAM)
+    t_hist = time.time() - t
+    print(f'Equal Frequency: {t_eq} \tHistogram: {t_hist}')
 if __name__ == '__main__':
-    import cProfile
-    cProfile.run('main()', './profiling/ionosphere_03_17.dat')
+    profiling = False
+    if profiling:
+        import cProfile
+        cProfile.run('main()', './profiling/ionosphere_03_17.dat')
+    else:
+        run_discretizers()
