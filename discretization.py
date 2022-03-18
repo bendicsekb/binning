@@ -1,4 +1,5 @@
 from math import floor
+from sre_constants import RANGE_UNI_IGNORE
 from pandas import DataFrame, Index, Series
 from numpy import arange, argmin
 from sklearn import mixture
@@ -35,7 +36,7 @@ class Discretizer:
             lower = active_ranges[0][0]
             higher = active_ranges[-1][1]
             intervals.append(column.index[lower:higher])
-        return intervals
+        return [interval for interval in intervals if not interval.empty]
 
     def make_ranges(self, B: list):
         ranges = []
@@ -95,8 +96,18 @@ class HistogramDiscretizer(Discretizer):
             self.global_discretization[attribute_name] = self.make_ranges(B)
 
     def discretize(self, column: Series):
-        return self.global_discretization[column.name]
+        discretization = []
+        for range in self.global_discretization[column.name]:
+            if range[1] < len(column):
+                discretization.append(range)
+            elif range[0] < len(column):
+                # Cut last bin to match column size
+                discretization.append((range[0], len(column) - 1))
+            else:
+                # Ignore all other ranges
+                break
+        return discretization
 
     def generate_intervals(self, column: Series, ranges: list[tuple]):
-        splits = self.generate_all_splits(len(self.global_discretization[column.name]))
+        splits = self.generate_all_splits(len(ranges) - 1)
         return self._generate_intervals(column, ranges, splits)
