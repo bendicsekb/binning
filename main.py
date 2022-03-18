@@ -56,22 +56,25 @@ def main(dataset_name: DataSets, quantizer_type: Discretizers):
         case Discretizers.EQUAL_FREQUENCY:
             quantizer = EqualFrequencyDiscretizer(10)
         case Discretizers.HISTOGRAM:
-            quantizer = HistogramDiscretizer(10, ds)
+            quantizer = HistogramDiscretizer(30, ds)
 
     search_constraints = SearchConstraints(depth=10, width=20, q=10, minimum_coverage=0.01, 
                                             quality_measure=qm, quantizer=quantizer)
 
     result = beamSearch(ds, qm, search_constraints)
-    print(result)
+    for res in result:
+        print(res[2])
 
 def run_discretizers():
     t = time.time()
-    main(DataSets.MAMMALS, Discretizers.EQUAL_FREQUENCY)
+    if True:
+        main(DataSets.MAMMALS, Discretizers.EQUAL_FREQUENCY)
     t_eq = time.time() - t
     t = time.time()
-    main(DataSets.MAMMALS, Discretizers.HISTOGRAM)
+    if True:
+        main(DataSets.MAMMALS, Discretizers.HISTOGRAM)
     t_hist = time.time() - t
-    print(f'Equal Frequency: {t_eq} \tHistogram: {t_hist}')
+    print(f'Equal Frequency: {round(t_eq, 2)}s \tHistogram: {round(t_hist, 2)}s')
 if __name__ == '__main__':
     profiling = False
     if profiling:
