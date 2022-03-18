@@ -76,6 +76,6 @@ if __name__ == '__main__':
     profiling = False
     if profiling:
         import cProfile
-        cProfile.run('main()', './profiling/ionosphere_03_17.dat')
+        cProfile.run('run_discretizers()', './profiling/ionosphere_03_17.dat')
     else:
         run_discretizers()
