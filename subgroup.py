@@ -54,3 +54,6 @@ class SubGroup(DataSet):
                 is_in = True
                 break
         return is_in
+
+    def __repr__(self) -> str:
+        return f'Quality: {self.quality}, {self.description}'
