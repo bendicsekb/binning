@@ -5,7 +5,7 @@ import numpy as np
 from scipy.io.arff import loadarff
 
 from dataset import DataSet, DataSets
-from discretization import EqualFrequencyDiscretizer, HistogramDiscretizer
+from discretization import Discretizer, Discretizers, EqualFrequencyDiscretizer, HistogramDiscretizer
 from quality_measure import WRACC
 from search_constraints import SearchConstraints
 from beamSearch import beamSearch 
@@ -39,9 +39,8 @@ def read_ionosphere(path: string):
     ds.targets = df['t']
     return ds
 
-def main():
+def main(dataset_name: DataSets, quantizer_type: Discretizers):
     ds: DataSet = DataSet()
-    dataset_name = DataSets.IONOSPHERE
 
     match dataset_name:
         case DataSets.IONOSPHERE:
@@ -50,10 +49,17 @@ def main():
             ds: DataSet = read_mammals("./data/Mammals_dataset/mammals.arff")
     
     qm = WRACC(ds, ds.targets[ds.targets==1].index)
-    #quantizer = EqualFrequencyDiscretizer(10)
-    quantizer = HistogramDiscretizer(10, ds)
+
+    quantizer = Discretizer()
+    match quantizer_type:
+        case Discretizers.EQUAL_FREQUENCY:
+            quantizer = EqualFrequencyDiscretizer(10)
+        case Discretizers.HISTOGRAM:
+            quantizer = HistogramDiscretizer(10, ds)
+
     search_constraints = SearchConstraints(depth=10, width=20, q=10, minimum_coverage=0.01, 
                                             quality_measure=qm, quantizer=quantizer)
+
     result = beamSearch(ds, qm, search_constraints)
     print(result)
 

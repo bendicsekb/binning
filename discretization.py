@@ -1,9 +1,14 @@
+from enum import Enum
 from math import floor
 from sre_constants import RANGE_UNI_IGNORE
 from pandas import DataFrame, Index, Series
 from numpy import arange, argmin
 from sklearn import mixture
 from dataset import DataSet
+
+class Discretizers(Enum):
+    EQUAL_FREQUENCY = 1
+    HISTOGRAM = 2
 
 class Discretizer:
     def discretize():
