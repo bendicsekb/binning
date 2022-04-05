@@ -38,11 +38,36 @@ def beamSearch(D: DataSet, phi: QualityMeasure,  P: SearchConstraints) -> list[S
     return F
 
 
+def modifiedBeamSearch(D: DataSet, phi: QualityMeasure,  P: SearchConstraints, descriptor_set:list) -> list[SubGroup]:
+    F: list[SubGroup] = list() # Result set
+    S: list[SubGroup] = list() # Candidate set
+    I: list[Condition] = list() # Empty description
+    unique_counter = int(2e32)
+    heapq.heappush(S, (0, 0, SubGroup(D, I))) # S = S U I_empty 
+    
+    for depth in range(P.depth):
+        beam: list[SubGroup] = []
+
+        while (len(S) > 0):
+            s: SubGroup = selectSeed(P, S)
+
+            P.use_columns = descriptor_set
+            for r in generateRefinements(s, D, P, depth):
+                unique_counter -= 1
+                score = phi.run_on(r)
+                r.quality = score
+                r.depth = depth
+                addToBeam(P, beam, r, score, unique_counter)
+                addToResultSet(P, F, r, score, unique_counter)
+        addToCandidateSet(S, beam)
+    
+    return F
+
 def selectSeed(P: SearchConstraints, S: SubGroup) -> SubGroup:
     return S.pop(0)[2] # S <- S \ s 
 
 def generateRefinements(s: SubGroup, D:DataSet, P:SearchConstraints, depth: int) -> list[SubGroup]:
-    attribute_names = D.descriptors.columns
+    attribute_names = P.use_columns
     # refinements = []
     for attribute_name in attribute_names:
         sorted = s.descriptors.loc[s.index[s.descriptors[attribute_name].argsort()]]

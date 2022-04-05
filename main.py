@@ -1,4 +1,5 @@
 # from beamSearch import beamSearch
+from enum import Enum
 import string
 import time
 import pandas as pd
@@ -9,7 +10,7 @@ from dataset import DataSet, DataSets
 from discretization import Discretizer, Discretizers, EqualFrequencyDiscretizer, HistogramDiscretizer
 from quality_measure import WRACC, ZSCORE
 from search_constraints import SearchConstraints
-from beamSearch import beamSearch 
+from beamSearch import beamSearch, modifiedBeamSearch 
 
 import pickle
 import json
@@ -49,9 +50,12 @@ def read_YearPredictionMSD(path:string):
     ds.targets = df['label']
     return ds
 
+class RunType(Enum):
+    NORMAL = 1
+    SAME_DESCRIPTORS = 2
 
 
-def main(dataset_name: DataSets, quantizer_type: Discretizers, eqf_bins: int):
+def main(dataset_name: DataSets, quantizer_type: Discretizers, eqf_bins: int, run_type: RunType):
     ds: DataSet = DataSet()
 
     match dataset_name:
@@ -65,8 +69,6 @@ def main(dataset_name: DataSets, quantizer_type: Discretizers, eqf_bins: int):
             ds : DataSet = read_YearPredictionMSD('./data/YearPredictionMSD/year_prediction.csv')
             qm = WRACC(ds, ds.targets[ds.targets==2009].index)
     
-    # qm = WRACC(ds, ds.targets[ds.targets==1].index)
-
     quantizer = Discretizer()
     match quantizer_type:
         case Discretizers.EQUAL_FREQUENCY:
@@ -74,13 +76,19 @@ def main(dataset_name: DataSets, quantizer_type: Discretizers, eqf_bins: int):
         case Discretizers.HISTOGRAM:
             quantizer = HistogramDiscretizer(10, ds)
 
-    search_constraints = SearchConstraints(depth=10, width=20, q=10, minimum_coverage=0.01, 
-                                            quality_measure=qm, quantizer=quantizer)
-
-    result = beamSearch(ds, qm, search_constraints)
+    result = []
+    match run_type:
+        case RunType.NORMAL:
+            search_constraints = SearchConstraints(depth=10, width=20, q=10, minimum_coverage=0.01, 
+                                                    quality_measure=qm, quantizer=quantizer, use_columns=list(ds.descriptors.columns))
+            result = beamSearch(ds, qm, search_constraints)
+            
+        case RunType.SAME_DESCRIPTORS:
+            search_constraints = SearchConstraints(depth=10, width=20, q=10, minimum_coverage=0.01, 
+                                                    quality_measure=qm, quantizer=quantizer, use_columns=list())
+            descriptor_set = get_descriptor_set()
+            result = modifiedBeamSearch(ds, qm, search_constraints, descriptor_set)
     result.sort()
-    # for res in result:
-    #     print(res[2])
     return result, ds
 
 
