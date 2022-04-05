@@ -106,15 +106,23 @@ def get_descriptor_set(resultset_filename):
 
     return descriptions
 
+def resultset_filename(base_filename):
+    return f'save/dump/{base_filename}_resultset.pickle'
+
+def dataset_filename(base_filename):
+    return f'save/dump/{base_filename}_dataset.pickle'
+
+def discretizations_filename(base_filename):
+    return f'save/json/{base_filename}_discretizations.json'
 
 def process_result(result, dataset, base_filename):
-    with open(f'save/dump/{base_filename}_resultset.pickle', 'wb') as f:
+    with open(resultset_filename(base_filename), 'wb') as f:
         pickle.dump(result, f)
-    with open(f'save/dump/{base_filename}_dataset.pickle', 'wb') as f:
+    with open(dataset_filename(base_filename), 'wb') as f:
         pickle.dump(dataset, f)
     resultset = [res for _, _, res in result]
     discretizations = [res.discretization_boundaries for res in resultset]
-    with open(f'save/json/{base_filename}_discretizations.json', 'w') as f:
+    with open(discretizations_filename(base_filename), 'w') as f:
         print(json.dumps(discretizations, indent=4), file=f)
 
 def run_eqf(dataset_type, eqf_bins):
