@@ -83,6 +83,22 @@ def main(dataset_name: DataSets, quantizer_type: Discretizers, eqf_bins: int):
     #     print(res[2])
     return result, ds
 
+
+def get_descriptor_set(resultset_filename):
+    resultset = []
+    with open(resultset_filename, 'rb') as f:
+        raw_resultset = pickle.load(f)
+    for res in raw_resultset:
+        resultset.append(res[2])
+
+    descriptions = []
+    for res in resultset:
+        description_set = list(dict.fromkeys([d.attribute for d in res.description]).keys())
+        descriptions.append(description_set)
+
+    return descriptions
+
+
 def process_result(result, dataset, base_filename):
     with open(f'save/dump/{base_filename}_resultset.pickle', 'wb') as f:
         pickle.dump(result, f)
