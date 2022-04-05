@@ -9,5 +9,6 @@ class DataSet:
 class DataSets(Enum):
     IONOSPHERE = 1
     MAMMALS = 2
+    YEARPREDICTIONMSD=3
 
     

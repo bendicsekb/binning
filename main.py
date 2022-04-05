@@ -40,16 +40,30 @@ def read_ionosphere(path: string):
     ds.targets = df['t']
     return ds
 
+def read_YearPredictionMSD(path:string):
+    df = pd.read_csv(path)
+    ds = DataSet()
+    ds.descriptors = df.drop('label', axis=1)
+    ds.targets = df['label']
+    return ds
+
+
+
 def main(dataset_name: DataSets, quantizer_type: Discretizers):
     ds: DataSet = DataSet()
 
     match dataset_name:
         case DataSets.IONOSPHERE:
             ds: DataSet = read_ionosphere("./data/Ionosphere/ionosphere.data")
+            qm = WRACC(ds, ds.targets[ds.targets==1].index)
         case DataSets.MAMMALS:
             ds: DataSet = read_mammals("./data/Mammals_dataset/mammals.arff")
-    
     qm = WRACC(ds, ds.targets[ds.targets==1].index)
+        case DataSets.YEARPREDICTIONMSD:
+            ds : DataSet = read_YearPredictionMSD('./data/YearPredictionMSD/year_prediction.csv')
+            qm = WRACC(ds, ds.targets[ds.targets==2009].index)
+    
+    # qm = WRACC(ds, ds.targets[ds.targets==1].index)
 
     quantizer = Discretizer()
     match quantizer_type:
