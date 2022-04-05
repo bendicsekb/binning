@@ -31,11 +31,11 @@ class SubGroup(DataSet):
         self.__add_condition(right_bound)
         self.subset(index)
 
-    def add_boundaries(self, attribute_name: string, discretization_boundaries: list[tuple]):
+    def add_boundaries(self, attribute_name: string, discretization_boundaries: list[tuple], depth):
         if attribute_name not in self.discretization_boundaries:
-            self.discretization_boundaries[attribute_name] = [discretization_boundaries]
+            self.discretization_boundaries[attribute_name] = [(depth, discretization_boundaries)]
         else:
-            self.discretization_boundaries[attribute_name].append(discretization_boundaries)
+            self.discretization_boundaries[attribute_name].append((depth, discretization_boundaries))
 
     def __add_condition(self, new_condition: Condition):
         if (self.__in_description(new_condition)):

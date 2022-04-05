@@ -25,8 +25,8 @@ def beamSearch(D: DataSet, phi: QualityMeasure,  P: SearchConstraints) -> list[S
         while (len(S) > 0):
             s: SubGroup = selectSeed(P, S)
 
-            R: list[SubGroup] = generateRefinements(s, D, P)
-            for r in R:
+            # R: list[SubGroup] = generateRefinements(s, D, P, depth)
+            for r in generateRefinements(s, D, P, depth):
                 unique_counter -= 1
                 score = phi.run_on(r)
                 r.quality = score
@@ -41,9 +41,9 @@ def beamSearch(D: DataSet, phi: QualityMeasure,  P: SearchConstraints) -> list[S
 def selectSeed(P: SearchConstraints, S: SubGroup) -> SubGroup:
     return S.pop(0)[2] # S <- S \ s 
 
-def generateRefinements(s: SubGroup, D:DataSet, P:SearchConstraints) -> list[SubGroup]:
+def generateRefinements(s: SubGroup, D:DataSet, P:SearchConstraints, depth: int) -> list[SubGroup]:
     attribute_names = D.descriptors.columns
-    refinements = []
+    # refinements = []
     for attribute_name in attribute_names:
         sorted = s.descriptors.loc[s.index[s.descriptors[attribute_name].argsort()]]
         # generate splits with tuples in form (from:to)
@@ -61,10 +61,10 @@ def generateRefinements(s: SubGroup, D:DataSet, P:SearchConstraints) -> list[Sub
             # 2. check if conditions can be added to description, if so, add to description and subset the data
             refinement: SubGroup = copy.deepcopy(s)
             refinement.add_conditions(interval, left_bound, right_bound)
-            refinement.add_boundaries(attribute_name, boundaries)
+            refinement.add_boundaries(attribute_name, boundaries, depth)
 
-            refinements.append(refinement)
-    return refinements
+            yield refinement
+    # return refinements
         
 
 # def generateIntervals(all:Index, splits: list[Index]) -> list[Index]:
