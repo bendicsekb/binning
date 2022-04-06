@@ -15,6 +15,12 @@ class Discretizer:
         ''' Takes a column and makes number_of_bins many bins, returns pandas.Index of each bin separately '''
         pass
     def generate_all_splits(self, n):
+        if(n==0):
+            return [[True]]
+        if(n==1):
+            splits = [[True, False]]
+            splits.extend([[False, True]])
+            return splits
         ranges = []
         for i in range(1,n):
             arr = [True] * i 
