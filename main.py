@@ -55,7 +55,7 @@ class RunType(Enum):
     SAME_DESCRIPTORS = 2
 
 
-def main(dataset_name: DataSets, quantizer_type: Discretizers, eqf_bins: int, run_type: RunType):
+def main(dataset_name: DataSets, quantizer_type: Discretizers, eqf_bins: int, run_type: RunType, descriptor_set: list[str]=[]):
     ds: DataSet = DataSet()
 
     match dataset_name:
@@ -82,17 +82,17 @@ def main(dataset_name: DataSets, quantizer_type: Discretizers, eqf_bins: int, ru
             search_constraints = SearchConstraints(depth=10, width=20, q=10, minimum_coverage=0.01, 
                                                     quality_measure=qm, quantizer=quantizer, use_columns=list(ds.descriptors.columns))
             result = beamSearch(ds, qm, search_constraints)
+            result.sort()
             
         case RunType.SAME_DESCRIPTORS:
             search_constraints = SearchConstraints(depth=10, width=20, q=10, minimum_coverage=0.01, 
                                                     quality_measure=qm, quantizer=quantizer, use_columns=list())
-            descriptor_set = get_descriptor_set()
             result = modifiedBeamSearch(ds, qm, search_constraints, descriptor_set)
-    result.sort()
+
     return result, ds
 
 
-def get_descriptor_set(resultset_filename):
+def get_descriptor_set(resultset_filename) -> list[str]:
     resultset = []
     with open(resultset_filename, 'rb') as f:
         raw_resultset = pickle.load(f)
@@ -115,31 +115,56 @@ def dataset_filename(base_filename):
 def discretizations_filename(base_filename):
     return f'save/json/{base_filename}_discretizations.json'
 
-def process_result(result, dataset, base_filename):
+def dump(result, dataset, base_filename, discretizations):
     with open(resultset_filename(base_filename), 'wb') as f:
         pickle.dump(result, f)
     with open(dataset_filename(base_filename), 'wb') as f:
         pickle.dump(dataset, f)
-    resultset = [res for _, _, res in result]
-    discretizations = [res.discretization_boundaries for res in resultset]
     with open(discretizations_filename(base_filename), 'w') as f:
         print(json.dumps(discretizations, indent=4), file=f)
+
+
+def process_result(result, dataset, base_filename):
+    resultset = [res for _, _, res in result]
+    discretizations = [res.discretization_boundaries for res in resultset]
+    dump(result, dataset, base_filename, discretizations)
+    
+
+def process_copy_result(result, dataset, base_filename):
+    resultset = []
+    for res in result:
+        resultset.append(res[1][0][2])
+    
+    discretizations = [res.discretization_boundaries for res in resultset]
+    dump(result, dataset, base_filename, discretizations)
 
 def run_eqf(dataset_type, eqf_bins):
     discretizer_type = Discretizers.EQUAL_FREQUENCY
     t = time.time()
     res = []
     ds = DataSet()
-    if True:
-        res, ds = main(dataset_type, discretizer_type, eqf_bins)
-        file_base = f'{dataset_type}_{discretizer_type}_{eqf_bins}bins'
+    res, ds = main(dataset_type, discretizer_type, eqf_bins, RunType.NORMAL)
+    file_base = f'{dataset_type}_{discretizer_type}_{eqf_bins}bins'
     process_result(res, ds, file_base)
     t_eq = time.time() - t
     print(f'{file_base} took {round(t_eq, 2)} seconds')
 
+def run_copy_hist(dataset_type: DataSets, eqf_bins: int):
+    discretizer_type = Discretizers.HISTOGRAM
+    res = []
+    ds = DataSet()
+    eqf_file_base = f'{dataset_type}_{Discretizers.EQUAL_FREQUENCY}_{eqf_bins}bins'
+    descriptor_set = get_descriptor_set(resultset_filename(eqf_file_base))
+    res, ds = main(dataset_type, discretizer_type, eqf_bins, RunType.SAME_DESCRIPTORS, descriptor_set)
+    file_base = f'{dataset_type}_{discretizer_type}_{eqf_bins}bins'
+    process_copy_result(res, ds, file_base)
+    return res
+    
+
 def run_discretizers():
     for dataset_type in [DataSets.IONOSPHERE, DataSets.MAMMALS]:
-        joblib.Parallel(n_jobs=10)(joblib.delayed(run_eqf)(dataset_type, eqf_bins) for eqf_bins in [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25])            
+        # joblib.Parallel(n_jobs=10)(joblib.delayed(run_eqf)(dataset_type, eqf_bins) for eqf_bins in [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25])            
+        joblib.Parallel(n_jobs=10)(joblib.delayed(run_copy_hist)(dataset_type, eqf_bins) for eqf_bins in [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25])            
     
     t = time.time()
     if False:
