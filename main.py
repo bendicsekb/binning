@@ -201,7 +201,7 @@ def compare_runtime():
     print(runtimes)
     print(results)
     runtimes.to_csv("save/runtimes/runtimes.csv")
-    results.to_json("save/perf/results.json")
+    results.to_csv("save/perf/results.csv")
 
 
 if __name__ == '__main__':
