@@ -55,7 +55,7 @@ class RunType(Enum):
     SAME_DESCRIPTORS = 2
 
 
-def main(dataset_name: DataSets, quantizer_type: Discretizers, eqf_bins: int, run_type: RunType, descriptor_set: list[str]=[]):
+def main(dataset_name: DataSets, quantizer_type: Discretizers, bins: int, run_type: RunType, descriptor_set: list[str]=[]):
     ds: DataSet = DataSet()
 
     match dataset_name:
@@ -72,9 +72,9 @@ def main(dataset_name: DataSets, quantizer_type: Discretizers, eqf_bins: int, ru
     quantizer = Discretizer()
     match quantizer_type:
         case Discretizers.EQUAL_FREQUENCY:
-            quantizer = EqualFrequencyDiscretizer(eqf_bins)
+            quantizer = EqualFrequencyDiscretizer(bins)
         case Discretizers.HISTOGRAM:
-            quantizer = HistogramDiscretizer(10, ds)
+            quantizer = HistogramDiscretizer(bins, ds)
 
     result = []
     match run_type:
@@ -107,20 +107,20 @@ def get_descriptor_set(resultset_filename) -> list[str]:
     return descriptions
 
 def resultset_filename(base_filename):
-    return f'save/dump/{base_filename}_resultset.pickle'
+    return f'save/dump/new/resultset/{base_filename}_resultset.pickle'
 
 def dataset_filename(base_filename):
-    return f'save/dump/{base_filename}_dataset.pickle'
+    return f'save/dump/new/dataset/{base_filename}_dataset.pickle'
 
 def discretizations_filename(base_filename):
-    return f'save/json/{base_filename}_discretizations.json'
+    return f'save/json/new/discretization/{base_filename}_discretizations.json'
 
 def dump(result, dataset, base_filename, discretizations):
-    with open(resultset_filename(base_filename), 'wb') as f:
+    with open(resultset_filename(base_filename), 'wb+') as f:
         pickle.dump(result, f)
-    with open(dataset_filename(base_filename), 'wb') as f:
+    with open(dataset_filename(base_filename), 'wb+') as f:
         pickle.dump(dataset, f)
-    with open(discretizations_filename(base_filename), 'w') as f:
+    with open(discretizations_filename(base_filename), 'w+') as f:
         print(json.dumps(discretizations, indent=4), file=f)
 
 
@@ -149,29 +149,39 @@ def run_eqf(dataset_type, eqf_bins):
     t_eq = time.time() - t
     print(f'{file_base} took {round(t_eq, 2)} seconds')
 
+
+def run_hist(dataset_type, max_bins):
+    discretizer_type = Discretizers.HISTOGRAM
+    t = time.time()
+    res = []
+    ds = DataSet()
+    res, ds = main(dataset_type, discretizer_type, max_bins, RunType.NORMAL)
+    file_base = f'{dataset_type}_{discretizer_type}_max{max_bins}bins'
+    process_result(res, ds, file_base)
+    t_eq = time.time() - t
+    print(f'{file_base} took {round(t_eq, 2)} seconds')
+
+
 def run_copy_hist(dataset_type: DataSets, eqf_bins: int):
     discretizer_type = Discretizers.HISTOGRAM
     res = []
     ds = DataSet()
     eqf_file_base = f'{dataset_type}_{Discretizers.EQUAL_FREQUENCY}_{eqf_bins}bins'
     descriptor_set = get_descriptor_set(resultset_filename(eqf_file_base))
-    res, ds = main(dataset_type, discretizer_type, eqf_bins, RunType.SAME_DESCRIPTORS, descriptor_set)
-    file_base = f'{dataset_type}_{discretizer_type}_{eqf_bins}bins'
+    res, ds = main(dataset_type, discretizer_type, 20, RunType.SAME_DESCRIPTORS, descriptor_set)
+    file_base = f'{dataset_type}_{discretizer_type}_COPY_{eqf_bins}bins_max20bins'
     process_copy_result(res, ds, file_base)
     return res
     
 
 def run_discretizers():
-    for dataset_type in [DataSets.IONOSPHERE, DataSets.MAMMALS]:
-        # joblib.Parallel(n_jobs=10)(joblib.delayed(run_eqf)(dataset_type, eqf_bins) for eqf_bins in [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25])            
-        joblib.Parallel(n_jobs=10)(joblib.delayed(run_copy_hist)(dataset_type, eqf_bins) for eqf_bins in [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25])            
-    
-    t = time.time()
-    if False:
-        res, ds = main(DataSets.YEARPREDICTIONMSD, Discretizers.HISTOGRAM)
-        process_result(res, ds, 'YPD_aa_max10bins_HIST')
-    t_hist = time.time() - t
-    print(f'Histogram: {round(t_hist, 2)}s')
+    for dataset_type in [DataSets.MAMMALS]: #[DataSets.IONOSPHERE, DataSets.MAMMALS]:
+        eqf_bin_range = [15,20,25] # [5,10,15,20,25]
+        n_jobs = 10 if len(eqf_bin_range) > 10 else len(eqf_bin_range)
+        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(run_eqf)(dataset_type, eqf_bins) for eqf_bins in eqf_bin_range)              
+        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(run_copy_hist)(dataset_type, eqf_bins) for eqf_bins in eqf_bin_range)
+        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(run_hist)(dataset_type, eqf_bins) for eqf_bins in eqf_bin_range)
+
 
 
 if __name__ == '__main__':
