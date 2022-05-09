@@ -148,7 +148,7 @@ def run_eqf(dataset_type, eqf_bins):
     file_base = f'{dataset_type}_{discretizer_type}_{eqf_bins}bins'
     process_result(res, ds, file_base)
     print(f'{file_base} took {round(t_main, 2)} seconds')
-    return t_main
+    return res, t_main
 
 
 def run_hist(dataset_type, max_bins):
@@ -161,7 +161,7 @@ def run_hist(dataset_type, max_bins):
     file_base = f'{dataset_type}_{discretizer_type}_max{max_bins}bins'
     process_result(res, ds, file_base)
     print(f'{file_base} took {round(t_main, 2)} seconds')
-    return t_main
+    return res, t_main
 
 def run_copy_hist(dataset_type: DataSets, eqf_bins: int):
     discretizer_type = Discretizers.HISTOGRAM
@@ -174,7 +174,7 @@ def run_copy_hist(dataset_type: DataSets, eqf_bins: int):
     t_main = time.time() - t
     file_base = f'{dataset_type}_{discretizer_type}_COPY_{eqf_bins}bins_max20bins'
     process_copy_result(res, ds, file_base)
-    return t_main
+    return res, t_main
     
 
 def run_discretizers():
@@ -189,21 +189,19 @@ def run_discretizers():
 def compare_runtime():
     idx = pd.MultiIndex.from_product(iterables=[[DataSets.IONOSPHERE, DataSets.MAMMALS],[5,10,15,20,25], [i for i in range(5)]], names=["dataset","bins", "run"])
     runtimes = pd.DataFrame(columns=["eqf","hist","copy_hist"], index=idx)
-
+    results = pd.DataFrame(columns=["eqf","hist","copy_hist"], index=idx)
     for i in range(5):
         for dataset_type in [DataSets.IONOSPHERE, DataSets.MAMMALS]:
             for bins in [5,10,15,20,25]:
-                runtimes.loc[(dataset_type, bins, i), "eqf"] = run_eqf(dataset_type, bins)
-                runtimes.loc[(dataset_type, bins, i), "hist"] = run_hist(dataset_type, bins)
-                runtimes.loc[(dataset_type, bins, i), "copy_hist"] = run_copy_hist(dataset_type, bins)
+                curr_index = (dataset_type, bins, i)
+                results.loc[curr_index, "eqf"], runtimes.loc[curr_index, "eqf"] = run_eqf(dataset_type, bins)
+                results.loc[curr_index, "hist"], runtimes.loc[curr_index, "hist"] = run_hist(dataset_type, bins)
+                results.loc[curr_index, "copy_hist"], runtimes.loc[curr_index, "copy_hist"] = run_copy_hist(dataset_type, bins)
     
     print(runtimes)
+    print(results)
     runtimes.to_csv("save/runtimes/runtimes.csv")
-
-
-
-
-
+    results.to_json("save/perf/results.json")
 
 
 if __name__ == '__main__':
