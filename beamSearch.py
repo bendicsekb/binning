@@ -16,7 +16,7 @@ def beamSearch(D: DataSet, phi: QualityMeasure,  P: SearchConstraints) -> list[S
     F: list[SubGroup] = list() # Result set
     S: list[SubGroup] = list() # Candidate set
     I: list[Condition] = list() # Empty description
-    unique_counter = int(2e32)
+    unique_counter = int(2e16-1)
     heapq.heappush(S, (0, 0, SubGroup(D, I))) # S = S U I_empty 
     
     for depth in range(P.depth):
