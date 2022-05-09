@@ -140,27 +140,28 @@ def process_copy_result(result, dataset, base_filename):
 
 def run_eqf(dataset_type, eqf_bins):
     discretizer_type = Discretizers.EQUAL_FREQUENCY
-    t = time.time()
     res = []
     ds = DataSet()
+    t = time.time()
     res, ds = main(dataset_type, discretizer_type, eqf_bins, RunType.NORMAL)
+    t_main = time.time() - t
     file_base = f'{dataset_type}_{discretizer_type}_{eqf_bins}bins'
     process_result(res, ds, file_base)
-    t_eq = time.time() - t
-    print(f'{file_base} took {round(t_eq, 2)} seconds')
+    print(f'{file_base} took {round(t_main, 2)} seconds')
+    return t_main
 
 
 def run_hist(dataset_type, max_bins):
     discretizer_type = Discretizers.HISTOGRAM
-    t = time.time()
     res = []
     ds = DataSet()
+    t = time.time()
     res, ds = main(dataset_type, discretizer_type, max_bins, RunType.NORMAL)
+    t_main = time.time() - t
     file_base = f'{dataset_type}_{discretizer_type}_max{max_bins}bins'
     process_result(res, ds, file_base)
-    t_eq = time.time() - t
-    print(f'{file_base} took {round(t_eq, 2)} seconds')
-
+    print(f'{file_base} took {round(t_main, 2)} seconds')
+    return t_main
 
 def run_copy_hist(dataset_type: DataSets, eqf_bins: int):
     discretizer_type = Discretizers.HISTOGRAM
@@ -168,10 +169,12 @@ def run_copy_hist(dataset_type: DataSets, eqf_bins: int):
     ds = DataSet()
     eqf_file_base = f'{dataset_type}_{Discretizers.EQUAL_FREQUENCY}_{eqf_bins}bins'
     descriptor_set = get_descriptor_set(resultset_filename(eqf_file_base))
+    t = time.time()
     res, ds = main(dataset_type, discretizer_type, 20, RunType.SAME_DESCRIPTORS, descriptor_set)
+    t_main = time.time() - t
     file_base = f'{dataset_type}_{discretizer_type}_COPY_{eqf_bins}bins_max20bins'
     process_copy_result(res, ds, file_base)
-    return res
+    return t_main
     
 
 def run_discretizers():
@@ -183,6 +186,25 @@ def run_discretizers():
         joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(run_hist)(dataset_type, eqf_bins) for eqf_bins in eqf_bin_range)
 
 
+def compare_runtime():
+    idx = pd.MultiIndex.from_product(iterables=[[DataSets.IONOSPHERE, DataSets.MAMMALS],[5,10,15,20,25], [i for i in range(5)]], names=["dataset","bins", "run"])
+    runtimes = pd.DataFrame(columns=["eqf","hist","copy_hist"], index=idx)
+
+    for i in range(5):
+        for dataset_type in [DataSets.IONOSPHERE, DataSets.MAMMALS]:
+            for bins in [5,10,15,20,25]:
+                runtimes.loc[(dataset_type, bins, i), "eqf"] = run_eqf(dataset_type, bins)
+                runtimes.loc[(dataset_type, bins, i), "hist"] = run_hist(dataset_type, bins)
+                runtimes.loc[(dataset_type, bins, i), "copy_hist"] = run_copy_hist(dataset_type, bins)
+    
+    print(runtimes)
+    runtimes.to_csv("save/runtimes/runtimes.csv")
+
+
+
+
+
+
 
 if __name__ == '__main__':
     profiling = False
@@ -190,4 +212,5 @@ if __name__ == '__main__':
         import cProfile
         cProfile.run('run_discretizers()', './profiling/ionosphere_03_17.dat')
     else:
-        run_discretizers()
+        # run_discretizers()
+        compare_runtime()
