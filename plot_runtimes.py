@@ -61,3 +61,7 @@ plot_runtimes(mammals_means, "save/runtimes/mammals_runtimes.png", "Mammals")
 
 # %%
 # %%
+mammals_means.mean()
+# %%
+ionosphere_means.mean()
+# %%
