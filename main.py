@@ -187,12 +187,14 @@ def run_discretizers():
 
 
 def compare_runtime():
-    idx = pd.MultiIndex.from_product(iterables=[[DataSets.IONOSPHERE, DataSets.MAMMALS],[5,10,15,20,25], [i for i in range(5)]], names=["dataset","bins", "run"])
+    bin_range = [5,10,15,20,25]
+    runs_range = [e for e in range(5)]
+    idx = pd.MultiIndex.from_product(iterables=[[DataSets.IONOSPHERE, DataSets.MAMMALS],bin_range, runs_range], names=["dataset","bins", "run"])
     runtimes = pd.DataFrame(columns=["eqf","hist","copy_hist"], index=idx)
     results = pd.DataFrame(columns=["eqf","hist","copy_hist"], index=idx)
-    for i in range(5):
+    for i in runs_range:
         for dataset_type in [DataSets.IONOSPHERE, DataSets.MAMMALS]:
-            for bins in [5,10,15,20,25]:
+            for bins in bin_range:
                 curr_index = (dataset_type, bins, i)
                 results.loc[curr_index, "eqf"], runtimes.loc[curr_index, "eqf"] = run_eqf(dataset_type, bins)
                 results.loc[curr_index, "hist"], runtimes.loc[curr_index, "hist"] = run_hist(dataset_type, bins)
@@ -202,6 +204,7 @@ def compare_runtime():
     print(results)
     runtimes.to_csv("save/runtimes/runtimes.csv")
     results.to_csv("save/perf/results.csv")
+    results.to_json("save/perf/results.json")
 
 
 if __name__ == '__main__':
